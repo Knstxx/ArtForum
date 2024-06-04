@@ -1,7 +1,6 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
-User = get_user_model()
 
 CHOICES = (
     (1, '1'),
@@ -15,6 +14,14 @@ CHOICES = (
     (9, '9'),
     (10, '10'),
 )
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+
+
+class MyUser(AbstractUser):
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
 
 
 class Genre(models.Model):
@@ -66,7 +73,7 @@ class Reviews(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -83,7 +90,7 @@ class Comment(models.Model):
     """Модель комментариев."""
 
     author = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         related_name='comments'
     )
