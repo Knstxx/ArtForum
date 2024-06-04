@@ -3,7 +3,7 @@ from rest_framework import permissions
 
 class IsAuthorModeratorOrReadOnly(permissions.BasePermission):
     """
-    Допуск на уровне объекта..
+    Допуск на уровне объекта.
     Изменение только для автора объекта или модератора.
     """
 
