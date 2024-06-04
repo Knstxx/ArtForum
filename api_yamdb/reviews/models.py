@@ -3,10 +3,21 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-CHOICES = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+CHOICES = (
+    (1, '1'),
+    (2, '2'),
+    (3, '3'),
+    (4, '4'),
+    (5, '5'),
+    (6, '6'),
+    (7, '7'),
+    (8, '8'),
+    (9, '9'),
+    (10, '10'),
+)
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     """Модель жанров."""
 
     name = models.CharField(max_length=256)
@@ -16,7 +27,7 @@ class Genres(models.Model):
         return self.name
 
 
-class Categories(models.Model):
+class Category(models.Model):
     """Модель жанров."""
 
     name = models.CharField(max_length=256)
@@ -33,13 +44,13 @@ class Title(models.Model):
     year = models.IntegerField()
     description = models.TextField()
     genre = models.ForeignKey(
-        Genres,
+        Genre,
         on_delete=models.SET_NULL,
         null=True,
         related_name='genres'
     )
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         related_name='categories'
