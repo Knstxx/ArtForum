@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from reviews.models import Reviews, Comment
+from reviews.models import Reviews, Comment, Genres, Title, Categories
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -45,3 +45,24 @@ class TitlesSerializer(serializers.ModelSerializer):
         # Пройтись циклом по queryset и высчитать среднее значение
         # из оценок.
         pass
+
+
+class TitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+
+class CategoriesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Categories
+        fields = '__all__'
+
+
+class GenresSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Genres
+        fields = '__all__'

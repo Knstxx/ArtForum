@@ -1,13 +1,15 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from reviews.models import Reviews, Comment
 from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny,
     IsAuthenticatedOrReadOnly
 )
-from .serializers import CommentSerializer
+
+from reviews.models import Reviews, Comment, Genres, Title, Categories
+from .serializers import (CommentSerializer, TitleSerializer,
+                          CategoriesSerializer, GenresSerializer)
 from .permissions import IsAuthorModeratorOrReadOnly
 
 
@@ -31,7 +33,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
             return Response(
                 'Нельзя оставить больше одного отзыва',
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
         return super().perform_create(serializer)
 
     def get_queryset(self):
@@ -44,7 +46,8 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthorModeratorOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthorModeratorOrReadOnly,
+                          IsAuthenticatedOrReadOnly]
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -56,3 +59,18 @@ class CommentsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title = self.get_post()
         return title.comments.all()
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+
+
+class CategoriesViewSet(viewsets.ModelViewSet):
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+
+
+class GenresViewSet(viewsets.ModelViewSet):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
