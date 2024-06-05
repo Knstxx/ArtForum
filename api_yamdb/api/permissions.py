@@ -1,6 +1,26 @@
 from rest_framework import permissions
 
 
+class IsAnonymous(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_anonymous
+
+
+class IsUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role.name == 'user'
+
+
+class IsModerator(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role.name == 'moderator'
+
+
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role.name == 'admin'
+
+
 class IsAuthorModeratorOrReadOnly(permissions.BasePermission):
     """
     Допуск на уровне объекта.
