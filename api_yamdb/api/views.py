@@ -1,4 +1,8 @@
+import random
+import string
+
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import (
@@ -9,8 +13,32 @@ from rest_framework.permissions import (
 
 from reviews.models import Reviews, Comment, Genre, Title, Category
 from .serializers import (CommentSerializer, TitleSerializer,
-                          CategoriesSerializer, GenresSerializer)
+                          CategoriesSerializer, GenresSerializer,
+                          RegisterSerializer,)
 from .permissions import IsAuthorModeratorOrReadOnly
+
+
+User = get_user_model()
+
+
+def generate_confirmation_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+
+class AuthViewSet(viewsets.ViewSet):
+    pass
+
+
+class RegisterViewSet(viewsets.ViewSet):
+    pass
+
+
+class UsersViewSet(viewsets.ViewSet):
+    pass
+
+
+class TokenObtainViewSet(viewsets.ViewSet):
+    pass
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

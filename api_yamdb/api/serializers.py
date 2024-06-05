@@ -1,7 +1,37 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from django.contrib.auth import get_user_model
+
 from reviews.models import Reviews, Comment, Genre, Title, Category
+
+
+User = get_user_model()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'role', 'first_name', 'last_name')
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            validated_data['username'],
+            validated_data['email'],
+            validated_data['password']
+        )
+        return user
+
+
+class TokenObtainSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
