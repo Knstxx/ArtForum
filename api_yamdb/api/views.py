@@ -10,35 +10,59 @@ from rest_framework.permissions import (
     AllowAny,
     IsAuthenticatedOrReadOnly
 )
+from rest_framework.decorators import action
 
-from reviews.models import Reviews, Comment, Genre, Title, Category
+from reviews.models import (Reviews, Comment,
+                            Genre, Title, Category, MyUser, Role)
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
-                          RegisterSerializer,)
+                          RegisterSerializer, TokenObtainSerializer,
+                          UserSerializer)
 from .permissions import IsAuthorModeratorOrReadOnly
+from .utils import generate_confirmation_code
 
 
 User = get_user_model()
 
 
-def generate_confirmation_code():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-
 class AuthViewSet(viewsets.ViewSet):
-    pass
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['post'], url_path='signup')
+    def signup(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        user.confirmation_code = generate_confirmation_code()
+        user.save()
+        user.email_user(
+            'Confirmation code',
+            f'Your confirmation code is: {user.confirmation_code}'
+        )
+        return Response({'detail': 'Confirmation email sent'},
+                        status=status.HTTP_201_CREATED)
 
 
 class RegisterViewSet(viewsets.ViewSet):
-    pass
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UsersViewSet(viewsets.ViewSet):
-    pass
+class UserViewSet(viewsets.ViewSet):
+    queryset = MyUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthorModeratorOrReadOnly]
 
 
 class TokenObtainViewSet(viewsets.ViewSet):
-    pass
+    serializer_class = TokenObtainSerializer
+    permission_classes = [AllowAny]
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
