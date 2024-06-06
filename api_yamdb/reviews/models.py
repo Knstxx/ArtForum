@@ -1,6 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 CHOICES = (
     (1, '1'),
@@ -14,30 +15,6 @@ CHOICES = (
     (9, '9'),
     (10, '10'),
 )
-
-
-class Role(models.Model):
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = [
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Admin'),
-    ]
-
-    name = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
-
-    def __str__(self):
-        return self.name
-
-
-class MyUser(AbstractUser):
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
-
-    def __str__(self):
-        return self.username
 
 
 class Genre(models.Model):
@@ -65,12 +42,11 @@ class Title(models.Model):
 
     name = models.TextField(max_length=256)
     year = models.IntegerField()
-    description = models.TextField()
-    genre = models.ForeignKey(
+    rating = models.SmallIntegerField('Рейтинг произведения', choices=CHOICES, null=True)
+    description = models.TextField(blank=True, default='')
+    genre = models.ManyToManyField(
         Genre,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='genres'
+        through='TitleGenre'
     )
     category = models.ForeignKey(
         Category,
@@ -83,20 +59,35 @@ class Title(models.Model):
         return self.name
 
 
+class TitleGenre(models.Model):
+
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='titles'
+    )
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='genres'
+    )
+
 class Reviews(models.Model):
     """Модель отзывов."""
 
     text = models.TextField()
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
-        MyUser,
+        User,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               related_name='reviews')
-    score = models.SmallIntegerField('Оценка произведения', choices=CHOICES)
+    score = models.SmallIntegerField('Оценка произведения', choices=CHOICES, default=None)
 
     def __str__(self):
         return self.text
@@ -106,13 +97,14 @@ class Comment(models.Model):
     """Модель комментариев."""
 
     author = models.ForeignKey(
-        MyUser,
+        User,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    title = models.ForeignKey(Title,
-                              on_delete=models.CASCADE,
-                              related_name='comments')
+    review = models.ForeignKey(Reviews,
+                               on_delete=models.CASCADE,
+                               related_name='reviews',
+                               null=True)
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
