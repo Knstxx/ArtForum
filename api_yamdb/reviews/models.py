@@ -35,6 +35,8 @@ class Role(models.Model):
 
 class MyUser(AbstractUser):
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
+    bio = models.TextField('Биография', blank=True)
+    confirmation_code = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
         return self.username

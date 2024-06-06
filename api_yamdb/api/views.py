@@ -1,28 +1,21 @@
-import random
-import string
-
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import (
-    IsAuthenticated,
     AllowAny,
     IsAuthenticatedOrReadOnly
 )
 from rest_framework.decorators import action
 
 from reviews.models import (Reviews, Comment,
-                            Genre, Title, Category, MyUser, Role)
+                            Genre, Title, Category, MyUser)
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer)
 from .permissions import IsAuthorModeratorOrReadOnly
 from .utils import generate_confirmation_code
-
-
-User = get_user_model()
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -33,36 +26,55 @@ class AuthViewSet(viewsets.ViewSet):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        user.confirmation_code = generate_confirmation_code()
-        user.save()
-        user.email_user(
-            'Confirmation code',
-            f'Your confirmation code is: {user.confirmation_code}'
-        )
-        return Response({'detail': 'Confirmation email sent'},
+        return Response({'email': user.email, 'username': user.username},
                         status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='token')
+    def token(self, request):
+        serializer = TokenObtainSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = MyUser.objects.get(username=serializer.validated_data['username'])
+        token = 'JWT_TOKEN_HERE'  # Generate JWT token here
+        return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class RegisterViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    pass
 
 
 class UserViewSet(viewsets.ViewSet):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthorModeratorOrReadOnly]
+
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TokenObtainViewSet(viewsets.ViewSet):
-    serializer_class = TokenObtainSerializer
     permission_classes = [AllowAny]
+    serializer_class = TokenObtainSerializer
+
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data['username']
+            confirmation_code = serializer.validated_data['confirmation_code']
+            try:
+                user = MyUser.objects.get(username=username)
+                if user.confirmation_code == confirmation_code:
+                    # Проверка прошла успешно, возвращаем JWT-токен
+                    # Здесь должна быть ваша логика для создания и возвращения JWT-токена
+                    return Response({"token": "your_generated_token"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"error": "Invalid confirmation code"}, status=status.HTTP_400_BAD_REQUEST)
+            except MyUser.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
