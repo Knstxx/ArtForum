@@ -1,56 +1,37 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from django.urls import include
+from rest_framework_simplejwt.views import (TokenObtainPairView,
+                                            TokenRefreshView,
+                                            TokenVerifyView)
 
 from api.views import (CommentsViewSet, ReviewsViewSet, TitleViewSet,
                        CategoriesViewSet, GenresViewSet, AuthViewSet,
-                       UsersViewSet)
+                       UserViewSet, RegisterViewSet, TokenObtainViewSet)
 
-comments_router = DefaultRouter()
-titles_router = DefaultRouter()
-categories_router = DefaultRouter()
-genres_router = DefaultRouter()
-auth_router = DefaultRouter()
-users_router = DefaultRouter()
-comments_router.register(
-    r'titles/(?P<title_id>\d+)/comments',
-    CommentsViewSet,
-    basename='comments'
-)
-comments_router.register(
-    r'titles/(?P<title_id>\d+)/reviews',
-    ReviewsViewSet,
-    basename='reviews'
-)
-titles_router.register(
-    r'posts',
-    TitleViewSet,
-    basename='titles'
-)
-categories_router.register(
-    r'categories',
-    CategoriesViewSet,
-    basename='categories'
-)
-genres_router.register(
-    r'genres',
-    GenresViewSet,
-    basename='genres'
-)
-auth_router.register(r'auth', AuthViewSet, basename='auth')
-users_router.register(r'users', UsersViewSet, basename='users')
+
+router = DefaultRouter()
+router.register(r'titles/(?P<title_id>\d+)/comments',
+                CommentsViewSet, basename='comments')
+router.register(r'titles/(?P<title_id>\d+)/reviews',
+                ReviewsViewSet, basename='reviews')
+router.register(r'posts', TitleViewSet, basename='titles')
+router.register(r'categories', CategoriesViewSet, basename='categories')
+router.register(r'genres', GenresViewSet, basename='genres')
+router.register(r'auth', AuthViewSet, basename='auth')
+router.register(r'users', UserViewSet, basename='users')
+router.register(r'register', RegisterViewSet, basename='register')
+router.register(r'token', TokenObtainViewSet, basename='token_obtain')
+
 urlpatterns = [
-    path('', include(comments_router.urls)),
-    path('', include(titles_router.urls)),
-    path('', include(categories_router.urls)),
-    path('', include(genres_router.urls)),
-    path('', include(auth_router.urls)),
-    path('', include(users_router.urls)),
+    path('', include(router.urls)),
     path('auth/', include('django.contrib.auth.urls')),
-]
-
-
-urlpatterns += [
-    path('users/', include(users_router.urls)),
-    path('users/me/', include(users_router.urls)),
+    path('users/me/', include(router.urls)),
+    path('jwt/', include([
+        path('create/', TokenObtainPairView.as_view(),
+             name='token_obtain_pair'),
+        path('refresh/', TokenRefreshView.as_view(),
+             name='token_refresh'),
+        path('verify/', TokenVerifyView.as_view(),
+             name='token_verify'),
+    ])),
 ]
