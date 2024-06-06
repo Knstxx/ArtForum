@@ -1,5 +1,4 @@
  # api_yamdb
 api_yamdb
 
-dsasssshsdcbsjhdbcjnsidcknjsdnjcnjksdckjnsdknjc
-csdfljvcnsdkjnbvkjsdnv
+dsa

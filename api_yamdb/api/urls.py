@@ -35,4 +35,3 @@ urlpatterns = [
              name='token_verify'),
     ])),
 ]
-sss
