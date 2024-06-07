@@ -167,11 +167,21 @@ class TitleSerializer(serializers.ModelSerializer):
 
     genre = GenresSerializer(many=True)
     category = CategoriesSerializer()
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
                   'category')
+
+    def get_rating(self, obj):
+        reviews = obj.reviews.all()
+        rating = 0
+        for review in reviews:
+            rating += review.score
+        rating = round(rating / len(reviews))
+        # breakpoint()
+        return rating
 
     def create(self, validated_data):
         genres = validated_data.pop('genre')

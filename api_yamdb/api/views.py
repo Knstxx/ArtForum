@@ -105,7 +105,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Получаем пользователя.
-        user = self.request.user
+        user = MyUser.objects.get(username='regular-user')
         # breakpoint()
         # Получаем произведение.
         title = self.get_title()
@@ -135,7 +135,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         review = self.get_review()
-        user = MyUser.objects.get(username='regul')
+        user = MyUser.objects.get(username='regular-user')
         serializer.save(author=user, review=review)
 
     def get_queryset(self):
