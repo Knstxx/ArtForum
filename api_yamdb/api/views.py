@@ -13,7 +13,7 @@ from reviews.models import (Reviews, Comment,
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
-                          UserSerializer, ReviewsSerializer)
+                          UserSerializer, ReviewsSerializer, UserMeSerilaizer)
 from .permissions import IsAuthorModeratorOrReadOnly
 from .utils import generate_confirmation_code
 
@@ -31,6 +31,7 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'], url_path='token')
     def token(self, request):
+        # breakpoint()
         serializer = TokenObtainSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = MyUser.objects.get(username=serializer.validated_data['username'])
@@ -45,6 +46,28 @@ class RegisterViewSet(viewsets.ViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'username'
+
+    def get_object(self):
+        # breakpoint()
+        user = get_object_or_404(MyUser, username=self.kwargs['username'])
+        # breakpoint()
+        return user
+
+
+class UserMeViewSet(viewsets.ModelViewSet):
+
+    def get_queryset(self):
+        user = get_object_or_404(MyUser, username=self.request.user)
+        return user
+    
+    serializer_class = UserMeSerilaizer
+    pagination_class = None
+
+    '''def get_object(self):
+        # breakpoint()
+        user = get_object_or_404(MyUser, username=self.kwargs['username'])
+        return user'''
 
 
 class TokenObtainViewSet(viewsets.ViewSet):
@@ -52,13 +75,13 @@ class TokenObtainViewSet(viewsets.ViewSet):
     serializer_class = TokenObtainSerializer
 
     def create(self, request):
+        # breakpoint()
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
             confirmation_code = serializer.validated_data['confirmation_code']
             try:
                 user = MyUser.objects.get(username=username)
-                breakpoint()
                 if user.confirmation_code == confirmation_code:
                     # Проверка прошла успешно, возвращаем JWT-токен
                     # Здесь должна быть ваша логика для создания и возвращения JWT-токена
@@ -82,7 +105,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Получаем пользователя.
-        user = MyUser.objects.get(username='regul')
+        user = self.request.user
         # breakpoint()
         # Получаем произведение.
         title = self.get_title()

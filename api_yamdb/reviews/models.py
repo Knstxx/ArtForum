@@ -16,23 +16,6 @@ CHOICES = (
 )
 
 
-'''class Role(models.Model):
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = [
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Admin'),
-    ]
-
-    name = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
-
-    def __str__(self):
-        return self.name'''
-
-
 class MyUser(AbstractUser):
     role = models.CharField(default='user', max_length=64)
     bio = models.TextField('Биография', blank=True)
