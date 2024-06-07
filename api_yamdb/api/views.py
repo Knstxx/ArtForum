@@ -13,7 +13,7 @@ from reviews.models import (Reviews, Comment,
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
-                          UserSerializer)
+                          UserSerializer, ReviewsSerializer)
 from .permissions import IsAuthorModeratorOrReadOnly
 from .utils import generate_confirmation_code
 
@@ -27,7 +27,7 @@ class AuthViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({'email': user.email, 'username': user.username},
-                        status=status.HTTP_201_CREATED)
+                        status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='token')
     def token(self, request):
@@ -42,16 +42,9 @@ class RegisterViewSet(viewsets.ViewSet):
     pass
 
 
-class UserViewSet(viewsets.ViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
-
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TokenObtainViewSet(viewsets.ViewSet):
@@ -65,9 +58,10 @@ class TokenObtainViewSet(viewsets.ViewSet):
             confirmation_code = serializer.validated_data['confirmation_code']
             try:
                 user = MyUser.objects.get(username=username)
+                breakpoint()
                 if user.confirmation_code == confirmation_code:
                     # Проверка прошла успешно, возвращаем JWT-токен
-                    # Здесь должна быть ваша логика для создания и возвращения JWT-токена
+                    # Здесь должна быть ваша логика для создания и возвращения JWT-токена!!!!!!!
                     return Response({"token": "your_generated_token"}, status=status.HTTP_200_OK)
                 else:
                     return Response({"error": "Invalid confirmation code"}, status=status.HTTP_400_BAD_REQUEST)
@@ -81,24 +75,25 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     """ВьюСет модели отзывов."""
 
     queryset = Reviews.objects.all()
-    model = Reviews
+    serializer_class = ReviewsSerializer
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def perform_create(self, serializer):
         # Получаем пользователя.
-        user = self.request.user
+        user = MyUser.objects.get(username='regul')
+        # breakpoint()
         # Получаем произведение.
         title = self.get_title()
         # Все отзывы пользователя к произведению.
-        user_reviews = user.titles.all().filter(title=title)
-        if len(user_reviews) != 0:
+        # user_reviews = user.titles.all().filter(title=title)
+        '''if len(user_reviews) != 0:
             return Response(
                 'Нельзя оставить больше одного отзыва',
                 status=status.HTTP_400_BAD_REQUEST
-            )
-        return super().perform_create(serializer)
+            )'''
+        serializer.save(author=user, title=title)
 
     def get_queryset(self):
         title = self.get_title()
@@ -110,31 +105,37 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthorModeratorOrReadOnly,
-                          IsAuthenticatedOrReadOnly]
+    # permission_classes = [IsAuthorModeratorOrReadOnly, IsAuthenticatedOrReadOnly]
 
-    def get_title(self):
-        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+    def get_review(self):
+        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
 
     def perform_create(self, serializer):
-        title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+        review = self.get_review()
+        user = MyUser.objects.get(username='regul')
+        serializer.save(author=user, review=review)
 
     def get_queryset(self):
-        title = self.get_post()
-        return title.comments.all()
+        review = self.get_review()
+        return review.comments.all()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
+    """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
 class GenresViewSet(viewsets.ModelViewSet):
+    """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer

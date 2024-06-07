@@ -16,25 +16,8 @@ CHOICES = (
 )
 
 
-class Role(models.Model):
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = [
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Admin'),
-    ]
-
-    name = models.CharField(max_length=20, choices=ROLE_CHOICES, default=USER)
-
-    def __str__(self):
-        return self.name
-
-
 class MyUser(AbstractUser):
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
+    role = models.CharField(default='user', max_length=64)
     bio = models.TextField('Биография', blank=True)
     confirmation_code = models.CharField(max_length=10, blank=True)
 
@@ -67,12 +50,13 @@ class Title(models.Model):
 
     name = models.TextField(max_length=256)
     year = models.IntegerField()
-    description = models.TextField()
-    genre = models.ForeignKey(
+    rating = models.SmallIntegerField('Рейтинг произведения',
+                                      choices=CHOICES,
+                                      null=True)
+    description = models.TextField(blank=True, default='')
+    genre = models.ManyToManyField(
         Genre,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='genres'
+        through='TitleGenre'
     )
     category = models.ForeignKey(
         Category,
@@ -83,6 +67,23 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TitleGenre(models.Model):
+    """Промежуточная модель для связи Ttile и Genre."""
+
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='titles'
+    )
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='genres'
+    )
 
 
 class Reviews(models.Model):
@@ -112,9 +113,10 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    title = models.ForeignKey(Title,
-                              on_delete=models.CASCADE,
-                              related_name='comments')
+    review = models.ForeignKey(Reviews,
+                               on_delete=models.CASCADE,
+                               null=True,
+                               related_name='comments')
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
