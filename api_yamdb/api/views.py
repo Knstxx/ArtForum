@@ -4,9 +4,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import (
     AllowAny,
-    IsAuthenticatedOrReadOnly
 )
 from rest_framework.decorators import action
+from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import (Reviews, Comment,
                             Genre, Title, Category, MyUser)
@@ -14,8 +14,6 @@ from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer, ReviewsSerializer)
-from .permissions import IsAuthorModeratorOrReadOnly
-from .utils import generate_confirmation_code
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -33,9 +31,21 @@ class AuthViewSet(viewsets.ViewSet):
     def token(self, request):
         serializer = TokenObtainSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = MyUser.objects.get(username=serializer.validated_data['username'])
-        token = 'JWT_TOKEN_HERE'  # Generate JWT token here
-        return Response({'token': token}, status=status.HTTP_200_OK)
+        username = serializer.validated_data['username']
+        confirmation_code = serializer.validated_data['confirmation_code']
+
+        try:
+            user = MyUser.objects.get(username=username)
+        except MyUser.DoesNotExist:
+            return Response({"error": "User not found"},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        if user.confirmation_code != confirmation_code:
+            return Response({"error": "Invalid confirmation code"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        token = AccessToken.for_user(user)
+        return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
 class RegisterViewSet(viewsets.ViewSet):
@@ -60,8 +70,6 @@ class TokenObtainViewSet(viewsets.ViewSet):
                 user = MyUser.objects.get(username=username)
                 breakpoint()
                 if user.confirmation_code == confirmation_code:
-                    # Проверка прошла успешно, возвращаем JWT-токен
-                    # Здесь должна быть ваша логика для создания и возвращения JWT-токена!!!!!!!
                     return Response({"token": "your_generated_token"}, status=status.HTTP_200_OK)
                 else:
                     return Response({"error": "Invalid confirmation code"}, status=status.HTTP_400_BAD_REQUEST)

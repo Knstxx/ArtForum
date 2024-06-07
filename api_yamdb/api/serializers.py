@@ -24,7 +24,6 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = MyUser.objects.create(**validated_data)
         user.role = self.initial_data['role']
-        # breakpoint()
         return user
 
 
@@ -33,14 +32,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email')
 
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                "Использование 'me' в качестве имени пользователя запрещено.")
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                "Пользователь с таким именем уже существует.")
-        return value
+    def validate(self, attrs):
+        if 'username' not in attrs:
+            raise serializers.ValidationError("Username is required")
+        if 'email' not in attrs:
+            raise serializers.ValidationError("Email is required")
+        if attrs['username'] == 'me':
+            raise serializers.ValidationError("Using 'me' as a username is not allowed.")
+        if User.objects.filter(username=attrs['username']).exists():
+            raise serializers.ValidationError("User with this username already exists.")
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError("User with this email already exists.")
+        return attrs
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
