@@ -61,7 +61,7 @@ class TokenObtainViewSet(viewsets.ViewSet):
                 breakpoint()
                 if user.confirmation_code == confirmation_code:
                     # Проверка прошла успешно, возвращаем JWT-токен
-                    # Здесь должна быть ваша логика для создания и возвращения JWT-токена
+                    # Здесь должна быть ваша логика для создания и возвращения JWT-токена!!!!!!!
                     return Response({"token": "your_generated_token"}, status=status.HTTP_200_OK)
                 else:
                     return Response({"error": "Invalid confirmation code"}, status=status.HTTP_400_BAD_REQUEST)
@@ -116,20 +116,26 @@ class CommentsViewSet(viewsets.ModelViewSet):
         serializer.save(author=user, review=review)
 
     def get_queryset(self):
-        title = self.get_review()
-        return title.comments.all()
+        review = self.get_review()
+        return review.comments.all()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
+    """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
 class GenresViewSet(viewsets.ModelViewSet):
+    """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer

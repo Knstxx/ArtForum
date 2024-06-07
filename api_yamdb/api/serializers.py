@@ -18,8 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
-    
+        fields = ('email', 'role', 'username', 'first_name', 'last_name',
+                  'bio')
+
     def create(self, validated_data):
         user = MyUser.objects.create(**validated_data)
         user.role = self.initial_data['role']
@@ -34,14 +35,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError("Использование 'me' в качестве имени пользователя запрещено.")
+            raise serializers.ValidationError(
+                "Использование 'me' в качестве имени пользователя запрещено.")
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Пользователь с таким именем уже существует.")
+            raise serializers.ValidationError(
+                "Пользователь с таким именем уже существует.")
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Пользователь с таким email уже существует.")
+            raise serializers.ValidationError(
+                "Пользователь с таким email уже существует.")
         return value
 
     def create(self, validated_data):
@@ -132,7 +136,7 @@ class GenresSerializer(serializers.ModelSerializer):
             return data
         data = Genre.objects.get(slug=data)
         return data
-    
+
     def validate_name(self, value):
         if len(value) > 256:
             raise serializers.ValidationError('Слишком длииииное имя!')
@@ -145,7 +149,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
 
     def create(self, validated_data):
         genres = validated_data.pop('genre')
@@ -163,7 +168,8 @@ class TitleSerializer(serializers.ModelSerializer):
             instance.genre.set(genres)
         instance.name = validated_data.get('name', instance.name)
         instance.year = validated_data.get('year', instance.year)
-        instance.description = validated_data.get('description', instance.description)
+        instance.description = validated_data.get('description',
+                                                  instance.description)
         instance.save()
         # breakpoint()
         return super().update(instance, validated_data)
