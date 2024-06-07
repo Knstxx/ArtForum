@@ -15,10 +15,6 @@ router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
 
 router.register(r'titles/(?P<title_id>\d+)/reviews',
                 ReviewsViewSet, basename='reviews')
-<<<<<<< HEAD
-=======
-
->>>>>>> 720b5fd527367290b3e5892421e9e2a38c847fc0
 router.register(r'titles', TitleViewSet, basename='titles')
 router.register(r'categories', CategoriesViewSet, basename='categories')
 router.register(r'genres', GenresViewSet, basename='genres')
