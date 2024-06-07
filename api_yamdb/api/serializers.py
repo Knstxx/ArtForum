@@ -51,6 +51,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
+
 class TokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
@@ -68,6 +69,7 @@ class TokenObtainSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid confirmation code')
 
         return data
+
 
 class ReviewsSerializer(serializers.ModelSerializer):
     """Сериализатор для модели отзывов."""

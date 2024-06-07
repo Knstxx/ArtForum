@@ -126,15 +126,21 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
+    """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
 
 class GenresViewSet(viewsets.ModelViewSet):
+    """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
