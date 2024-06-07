@@ -13,9 +13,18 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+
+    role = serializers.StringRelatedField()
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'role', 'first_name', 'last_name', "bio")
+        fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
+    
+    def create(self, validated_data):
+        user = MyUser.objects.create(**validated_data)
+        user.role = self.initial_data['role']
+        # breakpoint()
+        return user
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -41,6 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
         )
         user.confirmation_code = generate_confirmation_code()
+        # breakpoint()
         user.save()
         send_mail(
             'Confirmation code',
@@ -50,6 +60,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             fail_silently=False,
         )
         return user
+
 
 class TokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -69,6 +80,7 @@ class TokenObtainSerializer(serializers.Serializer):
 
         return data
 
+
 class ReviewsSerializer(serializers.ModelSerializer):
     """Сериализатор для модели отзывов."""
 
@@ -79,7 +91,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reviews
-        fields = "__all__"
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -88,46 +100,70 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-    post = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
-
-
-class TitlesSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели произведений."""
-
-    rating = serializers.SerializerMethodField()
-
-    class Meta:
-        fields = "__all__"
-        model = Title
-
-    def get_rating(self, obj):
-        # Здесь будет рейтинг.
-        # Получить все отзывы для произведения
-        # Пройтись циклом по queryset и высчитать среднее значение
-        # из оценок.
-        pass
-
-
-class TitleSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Title
-        fields = '__all__'
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('name', 'slug')
+
+    def to_internal_value(self, data):
+        # breakpoint()
+        if isinstance(data, dict):
+            return data
+        data = Category.objects.get(slug=data)
+        return data
 
 
 class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = ('name', 'slug')
+
+    def to_internal_value(self, data):
+        # breakpoint()
+        if isinstance(data, dict):
+            return data
+        data = Genre.objects.get(slug=data)
+        return data
+    
+    def validate_name(self, value):
+        if len(value) > 256:
+            raise serializers.ValidationError('Слишком длииииное имя!')
+
+
+class TitleSerializer(serializers.ModelSerializer):
+
+    genre = GenresSerializer(many=True)
+    category = CategoriesSerializer()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
+    def create(self, validated_data):
+        genres = validated_data.pop('genre')
+        title = Title.objects.create(
+            **validated_data,
+            )
+        # breakpoint()
+        title.genre.set(genres)
+        return title
+
+    def update(self, instance, validated_data):
+        # breakpoint()
+        if 'genre' in validated_data:
+            genres = validated_data.pop('genre')
+            instance.genre.set(genres)
+        instance.name = validated_data.get('name', instance.name)
+        instance.year = validated_data.get('year', instance.year)
+        instance.description = validated_data.get('description', instance.description)
+        instance.save()
+        # breakpoint()
+        return super().update(instance, validated_data)
