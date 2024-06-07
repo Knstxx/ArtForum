@@ -19,7 +19,6 @@ CHOICES = (
 class MyUser(AbstractUser):
     role = models.CharField(default='user', max_length=64)
     bio = models.TextField('Биография', blank=True)
-    username = models.CharField(unique=True, max_length=64)
     confirmation_code = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
@@ -51,7 +50,9 @@ class Title(models.Model):
 
     name = models.TextField(max_length=256)
     year = models.IntegerField()
-    rating = models.SmallIntegerField('Рейтинг произведения', choices=CHOICES, null=True)
+    rating = models.SmallIntegerField('Рейтинг произведения',
+                                      choices=CHOICES,
+                                      null=True)
     description = models.TextField(blank=True, default='')
     genre = models.ManyToManyField(
         Genre,
