@@ -12,20 +12,41 @@ from .utils import generate_confirmation_code
 User = get_user_model()
 
 
+class UserMeSerilaizer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        model = User
+        fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
+
+
 class UserSerializer(serializers.ModelSerializer):
 
     role = serializers.StringRelatedField()
 
     class Meta:
         model = User
-        fields = ('email', 'role', 'username', 'first_name', 'last_name',
-                  'bio')
+        fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
+        lookup_field = 'username'
+        extra_kwargs = {
+            'url': {'lookup_field': 'username'}
+        }
 
     def create(self, validated_data):
         user = MyUser.objects.create(**validated_data)
-        user.role = self.initial_data['role']
+        user.role = self.initial_data.get('role')
         # breakpoint()
         return user
+    
+    def update(self, instance, validated_data):
+        # breakpoint()
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.role = self.initial_data.get('role', instance.role)
+        return super().update(instance, validated_data)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -73,12 +94,12 @@ class TokenObtainSerializer(serializers.Serializer):
     def validate(self, data):
         username = data.get('username')
         confirmation_code = data.get('confirmation_code')
-
+        # breakpoint()
         try:
             user = MyUser.objects.get(username=username)
         except MyUser.DoesNotExist:
             raise serializers.ValidationError('User not found')
-
+        # breakpoint()
         if user.confirmation_code != confirmation_code:
             raise serializers.ValidationError('Invalid confirmation code')
 
@@ -146,11 +167,21 @@ class TitleSerializer(serializers.ModelSerializer):
 
     genre = GenresSerializer(many=True)
     category = CategoriesSerializer()
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
                   'category')
+
+    def get_rating(self, obj):
+        reviews = obj.reviews.all()
+        rating = 0
+        for review in reviews:
+            rating += review.score
+        rating = round(rating / len(reviews))
+        # breakpoint()
+        return rating
 
     def create(self, validated_data):
         genres = validated_data.pop('genre')
