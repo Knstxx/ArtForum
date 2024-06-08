@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 
 from api.views import (CommentsViewSet, ReviewsViewSet, TitleViewSet,
                        CategoriesViewSet, GenresViewSet, AuthViewSet,
-                       UserViewSet, RegisterViewSet, TokenObtainViewSet)
+                       UserViewSet, RegisterViewSet, TokenObtainViewSet, UserMeViewSet)
 
 
 router = DefaultRouter()
@@ -19,6 +19,7 @@ router.register(r'titles', TitleViewSet, basename='titles')
 router.register(r'categories', CategoriesViewSet, basename='categories')
 router.register(r'genres', GenresViewSet, basename='genres')
 router.register(r'auth', AuthViewSet, basename='auth')
+router.register(r'users/me', UserMeViewSet, basename='users')
 router.register(r'users', UserViewSet, basename='users')
 router.register(r'register', RegisterViewSet, basename='register')
 router.register(r'token', TokenObtainViewSet, basename='token_obtain')
@@ -26,7 +27,7 @@ router.register(r'token', TokenObtainViewSet, basename='token_obtain')
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('auth/', include('django.contrib.auth.urls')),
-    # path('v1/users/me/', UserViewSet.as_view({'post': 'create', 'get': 'list'})),
+    # path('v1/users/me/', UserMeViewSet.as_view({'get': 'list'})),
     # path('v1/users/', UserViewSet.as_view({'post': 'create'})),
     path('jwt/', include([
         path('create/', TokenObtainPairView.as_view(),
