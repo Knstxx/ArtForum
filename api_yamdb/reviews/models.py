@@ -17,7 +17,7 @@ CHOICES = (
 
 
 class MyUser(AbstractUser):
-    role = models.CharField(default='user', max_length=64)
+    role = models.CharField(max_length=64)
     bio = models.TextField('Биография', blank=True)
     confirmation_code = models.CharField(max_length=10, blank=True)
 

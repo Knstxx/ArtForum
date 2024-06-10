@@ -22,8 +22,6 @@ class UserMeSerilaizer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
-    role = serializers.StringRelatedField()
-
     class Meta:
         model = User
         fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
@@ -32,11 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
             'url': {'lookup_field': 'username'}
         }
 
-    def create(self, validated_data):
-        user = MyUser.objects.create(**validated_data)
-        user.role = self.initial_data['role']
-        return user
-    
     def update(self, instance, validated_data):
         # breakpoint()
         instance.username = validated_data.get('username', instance.username)

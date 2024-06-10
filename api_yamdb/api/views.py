@@ -14,7 +14,7 @@ from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer, ReviewsSerializer, UserMeSerilaizer)
-from .permissions import IsAuthorModeratorOrReadOnly
+from .permissions import IsAdminOnly
 from .utils import generate_confirmation_code
 
 
@@ -158,6 +158,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    permission_classes = [IsAdminOnly]
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -165,6 +166,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
+    permission_classes = [IsAdminOnly]
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -172,3 +174,4 @@ class GenresViewSet(viewsets.ModelViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
+    permission_classes = [IsAdminOnly]
