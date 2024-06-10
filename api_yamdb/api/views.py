@@ -14,7 +14,7 @@ from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer, ReviewsSerializer, UserMeSerilaizer)
-from .permissions import IsAdminOnly
+from .permissions import IsAdminOrRead, IsAdminOrModerOrRead
 from .utils import generate_confirmation_code
 
 
@@ -72,7 +72,7 @@ class UserMeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = get_object_or_404(MyUser, username=self.request.user)
         return user
-    
+
     serializer_class = UserMeSerilaizer
     pagination_class = None
 
@@ -109,6 +109,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     queryset = Reviews.objects.all()
     serializer_class = ReviewsSerializer
+    permission_classes = [IsAdminOrModerOrRead]
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -138,7 +139,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    # permission_classes = [IsAuthorModeratorOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrModerOrRead]
 
     def get_review(self):
         return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
@@ -158,7 +159,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = [IsAdminOnly]
+    permission_classes = [IsAdminOrRead]
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -166,7 +167,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    permission_classes = [IsAdminOnly]
+    permission_classes = [IsAdminOrRead]
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -174,4 +175,4 @@ class GenresViewSet(viewsets.ModelViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = [IsAdminOnly]
+    permission_classes = [IsAdminOrRead]

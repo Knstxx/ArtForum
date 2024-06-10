@@ -30,6 +30,14 @@ class UserSerializer(serializers.ModelSerializer):
             'url': {'lookup_field': 'username'}
         }
 
+    def create(self, validated_data):
+        if 'role' not in self.initial_data:
+            user = MyUser.objects.create(**validated_data)
+            user.role = 'user'
+        user = MyUser.objects.create(**validated_data)
+        # breakpoint()
+        return user
+
     def update(self, instance, validated_data):
         # breakpoint()
         instance.username = validated_data.get('username', instance.username)
