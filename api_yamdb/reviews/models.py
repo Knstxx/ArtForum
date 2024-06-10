@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 
 
 CHOICES = (
@@ -17,7 +18,20 @@ CHOICES = (
 
 
 class MyUser(AbstractUser):
-    role = models.CharField(max_length=64, default='user')
+    email = models.EmailField(max_length=254, unique=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Username must contain only letters, numbers, and @/./+/-/_ characters.'
+            )
+        ]
+    )
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    role = models.CharField(default='user', max_length=64)
     bio = models.TextField('Биография', blank=True)
     confirmation_code = models.CharField(max_length=10, blank=True)
 
