@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 
 from api.views import (CommentsViewSet, ReviewsViewSet, TitleViewSet,
                        CategoriesViewSet, GenresViewSet, AuthViewSet,
-                       UserViewSet, RegisterViewSet, TokenObtainViewSet, UserMeViewSet)
+                       UserViewSet, RegisterViewSet, TokenObtainViewSet)
 
 
 router = DefaultRouter()
@@ -19,7 +19,6 @@ router.register(r'titles', TitleViewSet, basename='titles')
 router.register(r'categories', CategoriesViewSet, basename='categories')
 router.register(r'genres', GenresViewSet, basename='genres')
 router.register(r'auth', AuthViewSet, basename='auth')
-router.register(r'users/me', UserMeViewSet, basename='users')
 router.register(r'users', UserViewSet, basename='users')
 router.register(r'register', RegisterViewSet, basename='register')
 router.register(r'token', TokenObtainViewSet, basename='token_obtain')

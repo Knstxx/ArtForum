@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import (
-    AllowAny,
+    AllowAny, IsAuthenticated
 )
 from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import AccessToken
@@ -13,7 +13,7 @@ from reviews.models import (Reviews, Comment,
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
-                          UserSerializer, ReviewsSerializer, UserMeSerilaizer)
+                          UserSerializer, ReviewsSerializer)
 from .permissions import IsAdminOrRead, IsAdminOrModerOrRead
 from .utils import generate_confirmation_code
 
@@ -66,20 +66,10 @@ class UserViewSet(viewsets.ModelViewSet):
         # breakpoint()
         return user
 
-
-class UserMeViewSet(viewsets.ModelViewSet):
-
-    def get_queryset(self):
-        user = get_object_or_404(MyUser, username=self.request.user)
-        return user
-
-    serializer_class = UserMeSerilaizer
-    pagination_class = None
-
-    '''def get_object(self):
-        # breakpoint()
-        user = get_object_or_404(MyUser, username=self.kwargs['username'])
-        return user'''
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='me')
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
 
 class TokenObtainViewSet(viewsets.ViewSet):

@@ -12,15 +12,8 @@ from .utils import generate_confirmation_code
 User = get_user_model()
 
 
-class UserMeSerilaizer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        model = User
-        fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
-
-
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(required=False)
 
     class Meta:
         model = User
