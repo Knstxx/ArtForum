@@ -18,6 +18,11 @@ CHOICES = (
 
 
 class MyUser(AbstractUser):
+    ROLES = [
+        ('user', 'User'),
+        ('moderator', 'Moderator'),
+        ('admin', 'Admin'),
+    ]
     email = models.EmailField(max_length=254, unique=True)
     username = models.CharField(
         max_length=150,
@@ -30,9 +35,26 @@ class MyUser(AbstractUser):
     )
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
-    role = models.CharField(default='user', max_length=64)
+    role = models.CharField(max_length=20, default='user', choices=ROLES)
     bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.CharField(max_length=10, blank=True)
+    confirmation_code = models.CharField(max_length=255, blank=False)
+
+    @property
+    def is_user(self):
+        return self.role == 'user'
+
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username

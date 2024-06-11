@@ -1,10 +1,9 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 
-from reviews.models import Reviews, Comment, Genre, Title, Category, MyUser
+from reviews.models import Reviews, Comment, Genre, Title, Category
 
 from .utils import generate_confirmation_code
 
@@ -13,8 +12,6 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(required=False)
-
     class Meta:
         model = User
         fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
@@ -23,57 +20,27 @@ class UserSerializer(serializers.ModelSerializer):
             'url': {'lookup_field': 'username'}
         }
 
-    def create(self, validated_data):
-        if 'role' not in self.initial_data:
-            user = MyUser.objects.create(**validated_data)
-            user.role = 'user'
-        user = MyUser.objects.create(**validated_data)
-        # breakpoint()
-        return user
-
-    def update(self, instance, validated_data):
-        # breakpoint()
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.bio = validated_data.get('bio', instance.bio)
-        instance.role = self.initial_data.get('role', instance.role)
-        return super().update(instance, validated_data)
-
 
 class RegisterSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = (
+            'username', 'email')
 
     def validate(self, attrs):
-        if 'username' not in attrs:
-            raise serializers.ValidationError("Username is required")
-        if 'email' not in attrs:
-            raise serializers.ValidationError("Email is required")
         if attrs['username'] == 'me':
             raise serializers.ValidationError("Using 'me' as a username is not allowed.")
-        if User.objects.filter(username=attrs['username']).exists():
-            raise serializers.ValidationError("User with this username already exists.")
-        if User.objects.filter(email=attrs['email']).exists():
-            raise serializers.ValidationError("User with this email already exists.")
         return attrs
 
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "Пользователь с таким email уже существует.")
-        return value
-
     def create(self, validated_data):
-        user = User.objects.create_user(
+        user, created = User.objects.get_or_create(
             username=validated_data['username'],
-            email=validated_data['email'],
+            email=validated_data['email']
         )
-        user.confirmation_code = generate_confirmation_code()
-        # breakpoint()
-        user.save()
+        if not created:
+            user.confirmation_code = generate_confirmation_code()
+            user.save()
         send_mail(
             'Confirmation code',
             f'Your confirmation code is: {user.confirmation_code}',
@@ -85,22 +52,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class TokenObtainSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
 
-    def validate(self, data):
-        username = data.get('username')
-        confirmation_code = data.get('confirmation_code')
-        # breakpoint()
-        try:
-            user = MyUser.objects.get(username=username)
-        except MyUser.DoesNotExist:
-            raise serializers.ValidationError('User not found')
-        # breakpoint()
-        if user.confirmation_code != confirmation_code:
-            raise serializers.ValidationError('Invalid confirmation code')
-
-        return data
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'confirmation_code'
+        )
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
