@@ -226,7 +226,6 @@ class Test00UserRegistration:
             f'Эндпоинт `{self.URL_TOKEN}` не найдена. Проверьте настройки в '
             '*urls.py*.'
         )
-
         assert response.status_code == HTTPStatus.BAD_REQUEST, (
             'Проверьте, что POST-запрос без данных, отправленный на эндпоинт '
             f'`{self.URL_TOKEN}`, возвращает ответ со статусом 400.'

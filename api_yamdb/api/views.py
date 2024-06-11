@@ -1,21 +1,77 @@
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import (
-    AllowAny,
+    AllowAny, IsAuthenticated
 )
-from rest_framework.decorators import action
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.views import APIView
+from django.core.mail import send_mail
+from rest_framework.filters import SearchFilter
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import (Reviews, Comment,
                             Genre, Title, Category, MyUser)
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
-                          UserSerializer, ReviewsSerializer, UserMeSerilaizer)
-from .permissions import IsAdminOrRead, IsAdminOrModerOrRead
+                          UserSerializer, ReviewsSerializer)
+from .permissions import (IsAdminOrRead, IsAdminOrModerOrRead,
+                          AdminModeratorAuthorPermission, AdminOnly,
+                          IsAdminUserOrReadOnly)
 from .utils import generate_confirmation_code
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = MyUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated, AdminOnly,)
+    lookup_field = 'username'
+    filter_backends = (SearchFilter, )
+    search_fields = ('username', )
+
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        url_path='me')
+    def get_current_user_info(self, request):
+        serializer = UserSerializer(request.user)
+        if request.method == 'PATCH':
+            if request.user.is_admin:
+                serializer = UserSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            else:
+                serializer = RegisterSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
+
+class TokenObtainAPIView(APIView):
+    def post(self, request):
+        serializer = TokenObtainSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            user = MyUser.objects.get(username=data['username'])
+        except MyUser.DoesNotExist:
+            return Response(
+                {'username': 'Пользователь не найден!'},
+                status=status.HTTP_404_NOT_FOUND)
+        if data.get('confirmation_code') == user.confirmation_code:
+            token = RefreshToken.for_user(user).access_token
+            return Response({'token': str(token)},
+                            status=status.HTTP_201_CREATED)
+        return Response(
+            {'confirmation_code': 'Неверный код подтверждения!'},
+            status=status.HTTP_400_BAD_REQUEST)
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -28,80 +84,6 @@ class AuthViewSet(viewsets.ViewSet):
         user = serializer.save()
         return Response({'email': user.email, 'username': user.username},
                         status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['post'], url_path='token')
-    def token(self, request):
-        # breakpoint()
-        serializer = TokenObtainSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        confirmation_code = serializer.validated_data['confirmation_code']
-
-        try:
-            user = MyUser.objects.get(username=username)
-        except MyUser.DoesNotExist:
-            return Response({"error": "User not found"},
-                            status=status.HTTP_404_NOT_FOUND)
-
-        if user.confirmation_code != confirmation_code:
-            return Response({"error": "Invalid confirmation code"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        token = AccessToken.for_user(user)
-        return Response({'token': str(token)}, status=status.HTTP_200_OK)
-
-
-class RegisterViewSet(viewsets.ViewSet):
-    pass
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = MyUser.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'username'
-
-    def get_object(self):
-        # breakpoint()
-        user = get_object_or_404(MyUser, username=self.kwargs['username'])
-        # breakpoint()
-        return user
-
-
-class UserMeViewSet(viewsets.ModelViewSet):
-
-    def get_queryset(self):
-        user = get_object_or_404(MyUser, username=self.request.user)
-        return user
-
-    serializer_class = UserMeSerilaizer
-    pagination_class = None
-
-    '''def get_object(self):
-        # breakpoint()
-        user = get_object_or_404(MyUser, username=self.kwargs['username'])
-        return user'''
-
-
-class TokenObtainViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]
-    serializer_class = TokenObtainSerializer
-
-    def create(self, request):
-        # breakpoint()
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            confirmation_code = serializer.validated_data['confirmation_code']
-            try:
-                user = MyUser.objects.get(username=username)
-                if user.confirmation_code == confirmation_code:
-                    return Response({"token": "your_generated_token"}, status=status.HTTP_200_OK)
-                else:
-                    return Response({"error": "Invalid confirmation code"}, status=status.HTTP_400_BAD_REQUEST)
-            except MyUser.DoesNotExist:
-                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
