@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 
+from .validators import slug_validator
+
 
 CHOICES = (
     (1, '1'),
@@ -74,7 +76,7 @@ class Category(models.Model):
     """Модель жанров."""
 
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50)
 
     def __str__(self):
         return self.name

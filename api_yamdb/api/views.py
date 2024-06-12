@@ -7,7 +7,7 @@ from rest_framework.permissions import (
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from rest_framework.filters import SearchFilter
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import (Reviews, Comment,
@@ -20,9 +20,11 @@ from .permissions import (IsAdminOrRead, IsAdminOrModerOrRead,
                           AdminModeratorAuthorPermission, AdminOnly,
                           IsAdminUserOrReadOnly)
 from .utils import generate_confirmation_code
+from .mixins import ListCreateDestroyViewSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
+
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, AdminOnly,)
@@ -30,11 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
 
-    @action(
-        methods=['GET', 'PATCH'],
-        detail=False,
-        permission_classes=(IsAuthenticated,),
-        url_path='me')
+    @action(methods=['GET', 'PATCH'], detail=False, permission_classes=(IsAuthenticated,), url_path='me')
     def get_current_user_info(self, request):
         serializer = UserSerializer(request.user)
         if request.method == 'PATCH':
@@ -75,6 +73,7 @@ class TokenObtainAPIView(APIView):
 
 
 class AuthViewSet(viewsets.ViewSet):
+
     permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='signup')
@@ -144,12 +143,15 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrRead]
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
+class CategoriesViewSet(ListCreateDestroyViewSet):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     permission_classes = [IsAdminOrRead]
+
+    '''def update(self, request, *args, **kwargs):
+        return Response('Нипутю...', status=status.HTTP_405_METHOD_NOT_ALLOWED)'''
 
 
 class GenresViewSet(viewsets.ModelViewSet):
