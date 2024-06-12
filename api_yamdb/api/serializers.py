@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from django.core.mail import send_mail
@@ -6,6 +8,7 @@ from django.contrib.auth import get_user_model
 from reviews.models import Reviews, Comment, Genre, Title, Category
 
 from .utils import generate_confirmation_code
+from reviews.validators import slug_validator
 
 
 User = get_user_model()
@@ -21,24 +24,41 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
+
+    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
 
     class Meta:
         model = User
         fields = (
             'username', 'email')
 
-    def validate(self, attrs):
-        if attrs['username'] == 'me':
+    def validate(self, data):
+        if data['username'] == 'me':
             raise serializers.ValidationError("Using 'me' as a username is not allowed.")
-        return attrs
+        if len(data['username']) > 150:
+            raise serializers.ValidationError("Email already exists...")
+        if len(data['email']) > 254:
+            raise serializers.ValidationError("Email tooo looong...")
+        pattern = re.compile(r'^[\w.@+-]+\Z')
+        if not pattern.match(data['username']):
+            raise serializers.ValidationError('Корявый username !')
+        user_email = User.objects.filter(email=data['email'])
+        user_username = User.objects.filter(username=data['username'])
+        if user_email.exists() and user_email[0].username != data['username']:
+            raise serializers.ValidationError("Email already exists...")
+        if user_username.exists() and user_username[0].email != data['email']:
+            raise serializers.ValidationError("No")
+
+        return data
 
     def create(self, validated_data):
         user, created = User.objects.get_or_create(
             username=validated_data['username'],
             email=validated_data['email']
         )
-        if not created:
+        if created:
             user.confirmation_code = generate_confirmation_code()
             user.save()
         send_mail(
@@ -88,11 +108,36 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategoriesSerializer(serializers.Serializer):
+
+    name = serializers.CharField()
+    slug = serializers.SlugField()
 
     class Meta:
         model = Category
         fields = ('name', 'slug')
+    
+    def validate(self, data):
+        if not data:
+            raise serializers.ValidationError('Data is empty...')
+        slug = data['slug']
+        category = Category.objects.filter(slug=slug)
+        if category.exists():
+            raise serializers.ValidationError('Already exists...')
+        name = data['name']
+        if len(name) > 256:
+            raise serializers.ValidationError('Too long name !')
+        if len(slug) > 50:
+            raise serializers.ValidationError('Too long slug !')
+        pattern = re.compile(r"^[-a-zA-Z0-9_]+$")
+        if not pattern.match(slug):
+            raise serializers.ValidationError('Символы латинского алфавита, цифры и знак подчёркивания')
+        # breakpoint()
+        return data
+        
+    def create(self, validated_data):
+        # breakpoint()
+        return Category(**validated_data)
 
     def to_internal_value(self, data):
         # breakpoint()
