@@ -18,11 +18,11 @@ class IsModerator(permissions.BasePermission):
 
 
 class IsAdminOrRead(permissions.BasePermission):
+
     def has_permission(self, request, view):
         return ((request.user.is_authenticated
                  and request.user.role == 'admin')
                 or request.method in permissions.SAFE_METHODS)
-
 
 class IsAdminOrModerOrRead(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
