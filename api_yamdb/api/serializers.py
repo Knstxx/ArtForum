@@ -17,7 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'role', 'username', 'first_name', 'last_name', 'bio')
+        fields = ('email', 'role', 'username',
+                  'first_name', 'last_name', 'bio')
         lookup_field = 'username'
         extra_kwargs = {
             'url': {'lookup_field': 'username'}
@@ -36,7 +37,8 @@ class UserMeSerialzier(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'role', 'first_name', 'last_name', 'bio')
+        fields = ('username', 'email', 'role',
+                  'first_name', 'last_name', 'bio')
 
     def validate(self, data):
         if 'first_name' in data:
