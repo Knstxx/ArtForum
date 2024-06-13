@@ -87,9 +87,6 @@ class Title(models.Model):
 
     name = models.TextField(max_length=256)
     year = models.IntegerField()
-    rating = models.SmallIntegerField('Рейтинг произведения',
-                                      choices=CHOICES,
-                                      null=True)
     description = models.TextField(blank=True, default='')
     genre = models.ManyToManyField(
         Genre,
@@ -123,7 +120,7 @@ class TitleGenre(models.Model):
     )
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     """Модель отзывов."""
 
     text = models.TextField()
@@ -138,6 +135,11 @@ class Reviews(models.Model):
                               related_name='reviews')
     score = models.SmallIntegerField('Оценка произведения', choices=CHOICES)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['author', 'title'],
+                                    name='unique_review')]
+
     def __str__(self):
         return self.text
 
@@ -150,7 +152,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    review = models.ForeignKey(Reviews,
+    review = models.ForeignKey(Review,
                                on_delete=models.CASCADE,
                                null=True,
                                related_name='comments')
