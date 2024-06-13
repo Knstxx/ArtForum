@@ -4,8 +4,9 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 
-from reviews.models import Reviews, Comment, Genre, Title, Category
+from reviews.models import Review, Comment, Genre, Title, Category
 
 from .utils import generate_confirmation_code
 from reviews.validators import slug_validator
@@ -137,8 +138,23 @@ class ReviewsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Reviews
+        model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
+    
+    def validate(self, value):
+        author = self.context['request'].user
+        title_id = (self.context['request'].
+                    parser_context['kwargs'].get('title_id'))
+        title = get_object_or_404(
+            Title,
+            id=title_id
+        )
+        if (self.context['request'].method == 'POST'
+                and title.reviews.filter(author=author).exists()):
+            raise serializers.ValidationError(
+                f'Отзыв на произведение {title.name} уже существует'
+            )
+        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -186,32 +202,12 @@ class TitleSerializer(serializers.ModelSerializer):
 
     genre = GenreField(slug_field='slug', queryset=Genre.objects.all(), many=True)
     category = CategoryField(slug_field='slug', queryset=Category.objects.all(), required=True)
+    rating = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
                   'category')
-
-    def get_rating(self, obj):
-        reviews = obj.reviews.all()
-        rating = 0
-        for review in reviews:
-            rating += review.score
-        try:
-            rating = round(rating / len(reviews))
-        except ZeroDivisionError:
-            rating = None
-        # breakpoint()
-        return rating
-
-    '''def create(self, validated_data):
-        genres = validated_data.pop('genre')
-        title = Title.objects.create(
-            **validated_data,
-            )
-        # breakpoint()
-        title.genre.set(genres)
-        return title'''
 
     def update(self, instance, validated_data):
         # breakpoint()
