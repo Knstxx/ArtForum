@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-from rest_framework_simplejwt.backends import TokenBackend
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
@@ -7,7 +6,6 @@ from rest_framework.permissions import (
     AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 )
 from rest_framework.views import APIView
-from django.core.mail import send_mail
 from django.db.models import Avg
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action
@@ -19,10 +17,9 @@ from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer, ReviewsSerializer, UserMeSerialzier)
-from .permissions import (IsAdminOrRead, IsAdminOrModerOrRead,
+from .permissions import (IsAdminOrRead,
                           AdminOnly,
                           IsAdminModeratorAuthorOrReadOnly)
-from .utils import generate_confirmation_code
 from .mixins import ListCreateDestroyViewSet
 from .filters import TitleRangeFilter
 
@@ -37,7 +34,8 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', )
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    @action(methods=['GET', 'PATCH'], detail=False, permission_classes=(IsAuthenticated,), url_path='me')
+    @action(methods=['GET', 'PATCH'], detail=False,
+            permission_classes=(IsAuthenticated,), url_path='me')
     def get_current_user_info(self, request):
         serializer = UserSerializer(request.user)
         if request.method == 'PATCH':

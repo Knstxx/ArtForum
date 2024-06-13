@@ -1,15 +1,12 @@
 import re
-
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from .utils import generate_confirmation_code
 
 from reviews.models import Review, Comment, Genre, Title, Category
-
-from .utils import generate_confirmation_code
-from reviews.validators import slug_validator
 
 
 User = get_user_model()
@@ -50,7 +47,8 @@ class UserMeSerialzier(serializers.Serializer):
                 raise serializers.ValidationError('Tooo looong last_name...')
         if 'username' in data:
             pattern = re.compile(r'^[\w.@+-]+\Z')
-            if len(data['username']) > 150 or not pattern.match(data['username']):
+            if (len(data['username']) > 150
+                    or not pattern.match(data['username'])):
                 raise serializers.ValidationError('incorect username !')
         if 'email' in data:
             if len(data['email']) > 254:
@@ -60,12 +58,15 @@ class UserMeSerialzier(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.first_name = validated_data.get('first_name',
+                                                 instance.first_name)
+        instance.last_name = validated_data.get('last_name',
+                                                instance.last_name)
         instance.bio = validated_data.get('bio', instance.bio)
 
         instance.save()
         return instance
+
 
 class RegisterSerializer(serializers.Serializer):
     """Сериализатор для регистрации."""
@@ -80,7 +81,8 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data['username'] == 'me':
-            raise serializers.ValidationError("Using 'me' as a username is not allowed.")
+            raise serializers.ValidationError(
+                "Using 'me' as a username is not allowed.")
         if len(data.get('username')) > 150:
             raise serializers.ValidationError("Email already exists...")
         if len(data.get('email')) > 254:
@@ -140,7 +142,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-    
+
     def validate(self, value):
         author = self.context['request'].user
         title_id = (self.context['request'].
@@ -200,8 +202,12 @@ class CategoryField(serializers.SlugRelatedField):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    genre = GenreField(slug_field='slug', queryset=Genre.objects.all(), many=True)
-    category = CategoryField(slug_field='slug', queryset=Category.objects.all(), required=True)
+    genre = GenreField(slug_field='slug',
+                       queryset=Genre.objects.all(),
+                       many=True)
+    category = CategoryField(slug_field='slug',
+                             queryset=Category.objects.all(),
+                             required=True)
     rating = serializers.FloatField(read_only=True)
 
     class Meta:
@@ -210,7 +216,6 @@ class TitleSerializer(serializers.ModelSerializer):
                   'category')
 
     def update(self, instance, validated_data):
-        # breakpoint()
         if 'genre' in validated_data:
             genres = validated_data.pop('genre')
             instance.genre.set(genres)
@@ -219,5 +224,4 @@ class TitleSerializer(serializers.ModelSerializer):
         instance.description = validated_data.get('description',
                                                   instance.description)
         instance.save()
-        # breakpoint()
         return super().update(instance, validated_data)

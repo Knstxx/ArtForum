@@ -7,8 +7,9 @@ from api.views import (CommentsViewSet, ReviewsViewSet, TitleViewSet,
 
 
 router = DefaultRouter()
-router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-                CommentsViewSet, basename='comments')
+router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentsViewSet, basename='comments')
 
 router.register(r'titles/(?P<title_id>\d+)/reviews',
                 ReviewsViewSet, basename='reviews')
