@@ -57,6 +57,7 @@ class Test04TitleAPI:
             'description': 'Рон Свонсон рекомендует.'
         }
         response = admin_client.post(self.TITLES_URL, data=post_data_1)
+        # breakpoint()
         assert response.status_code == HTTPStatus.CREATED, (
             f'Если POST-запрос администратора к `{self.TITLES_URL}` '
             'содержит корректные данные - должен вернуться ответ со статусом '
