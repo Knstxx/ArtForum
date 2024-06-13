@@ -168,19 +168,24 @@ class GenresSerializer(serializers.ModelSerializer):
         model = Genre
         fields = ('name', 'slug')
 
-    '''def to_internal_value(self, data):
-        if isinstance(data, dict):
-            return data
-        data = Genre.objects.get(slug=data)
-        return data'''
+
+class GenreField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        serializer = GenresSerializer(value)
+        return serializer.data
+
+
+class CategoryField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        serializer = CategoriesSerializer(value)
+        return serializer.data
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    # genre = GenresSerializer(many=True)
-    # category = CategoriesSerializer()
-    rating = serializers.SerializerMethodField()
+    genre = GenreField(slug_field='slug', queryset=Genre.objects.all(), many=True)
+    category = CategoryField(slug_field='slug', queryset=Category.objects.all(), required=True)
 
     class Meta:
         model = Title
@@ -195,7 +200,7 @@ class TitleSerializer(serializers.ModelSerializer):
         try:
             rating = round(rating / len(reviews))
         except ZeroDivisionError:
-            rating = 0
+            rating = None
         # breakpoint()
         return rating
 

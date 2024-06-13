@@ -7,7 +7,4 @@ class ListCreateDestroyViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-
-    lookup_field = 'slug'
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
+    pass
