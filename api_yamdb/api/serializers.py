@@ -153,84 +153,33 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class CategoriesSerializer(serializers.Serializer):
+class CategoriesSerializer(serializers.ModelSerializer):
     """Сериализатор категорий."""
-
-    name = serializers.CharField()
-    slug = serializers.SlugField()
 
     class Meta:
         model = Category
         fields = ('name', 'slug')
-        lookup_field = 'slug'
-        extra_kwargs = {
-            'url': {'lookup_field': 'slug'}
-        }
-    
-    def validate(self, data):
-        if not data:
-            raise serializers.ValidationError('Data is empty...')
-        slug = data['slug']
-        category = Category.objects.all()
-        slugs = []
-        for categ in category:
-            slugs.append(categ.slug)
-        # breakpoint()
-        if slug in slugs:
-            raise serializers.ValidationError('Already exists...')
-        name = data['name']
-        if len(name) > 256:
-            raise serializers.ValidationError('Too long name !')
-        if len(slug) > 50:
-            raise serializers.ValidationError('Too long slug !')
-        pattern = re.compile(r"^[-a-zA-Z0-9_]+$")
-        if not pattern.match(slug):
-            raise serializers.ValidationError('Символы латинского алфавита, цифры и знак подчёркивания')
-        # breakpoint()
-        return data
-
-    def create(self, validated_data):
-        category = Category.objects.all()
-        slug = validated_data['slug']
-        slugs = []
-        for categ in category:
-            slugs.append(categ.slug)
-        # breakpoint()
-        if slug in slugs:
-            raise serializers.ValidationError('Already exists...')
-        category = Category.objects.create(**validated_data)
-        return category
-
-    def to_internal_value(self, data):
-        # breakpoint()
-        if isinstance(data, dict):
-            return data
-        data = Category.objects.get(slug=data)
-        return data
 
 
 class GenresSerializer(serializers.ModelSerializer):
+    """Сериализатор жанров."""
 
     class Meta:
         model = Genre
         fields = ('name', 'slug')
 
-    def to_internal_value(self, data):
-        # breakpoint()
+    '''def to_internal_value(self, data):
         if isinstance(data, dict):
             return data
         data = Genre.objects.get(slug=data)
-        return data
-
-    def validate_name(self, value):
-        if len(value) > 256:
-            raise serializers.ValidationError('Слишком длииииное имя!')
+        return data'''
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведений."""
 
-    genre = GenresSerializer(many=True)
-    category = CategoriesSerializer()
+    # genre = GenresSerializer(many=True)
+    # category = CategoriesSerializer()
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -243,18 +192,21 @@ class TitleSerializer(serializers.ModelSerializer):
         rating = 0
         for review in reviews:
             rating += review.score
-        rating = round(rating / len(reviews))
+        try:
+            rating = round(rating / len(reviews))
+        except ZeroDivisionError:
+            rating = 0
         # breakpoint()
         return rating
 
-    def create(self, validated_data):
+    '''def create(self, validated_data):
         genres = validated_data.pop('genre')
         title = Title.objects.create(
             **validated_data,
             )
         # breakpoint()
         title.genre.set(genres)
-        return title
+        return title'''
 
     def update(self, instance, validated_data):
         # breakpoint()
