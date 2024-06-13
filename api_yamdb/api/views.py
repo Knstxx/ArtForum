@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated
@@ -144,7 +145,9 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = [IsAdminOrRead]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ('genre__slug', 'category__slug', 'name', 'year')
+    # permission_classes = [IsAdminOrRead]
 
 
 class CategoriesViewSet(ListCreateDestroyViewSet):
@@ -156,9 +159,13 @@ class CategoriesViewSet(ListCreateDestroyViewSet):
     permission_classes = [IsAdminOrRead]
 
 
-class GenresViewSet(viewsets.ModelViewSet):
+class GenresViewSet(ListCreateDestroyViewSet):
     """Вьюсет для жанров."""
 
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     permission_classes = [IsAdminOrRead]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', ]
+    lookup_field = 'slug'
+    http_method_names = ['get', 'post', 'delete']
