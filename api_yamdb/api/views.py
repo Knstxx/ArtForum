@@ -15,7 +15,7 @@ from reviews.models import (Reviews, Comment,
 from .serializers import (CommentSerializer, TitleSerializer,
                           CategoriesSerializer, GenresSerializer,
                           RegisterSerializer, TokenObtainSerializer,
-                          UserSerializer, ReviewsSerializer)
+                          UserSerializer, ReviewsSerializer, UserMeSerialzier)
 from .permissions import (IsAdminOrRead, IsAdminOrModerOrRead,
                           AdminModeratorAuthorPermission, AdminOnly,
                           IsAdminUserOrReadOnly)
@@ -31,6 +31,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(methods=['GET', 'PATCH'], detail=False, permission_classes=(IsAuthenticated,), url_path='me')
     def get_current_user_info(self, request):
@@ -42,7 +43,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     data=request.data,
                     partial=True)
             else:
-                serializer = RegisterSerializer(
+                serializer = UserMeSerialzier(
                     request.user,
                     data=request.data,
                     partial=True)
@@ -50,6 +51,9 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class TokenObtainAPIView(APIView):
@@ -148,10 +152,8 @@ class CategoriesViewSet(ListCreateDestroyViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
+    lookup_field = 'slug'
     permission_classes = [IsAdminOrRead]
-
-    '''def update(self, request, *args, **kwargs):
-        return Response('Нипутю...', status=status.HTTP_405_METHOD_NOT_ALLOWED)'''
 
 
 class GenresViewSet(viewsets.ModelViewSet):
