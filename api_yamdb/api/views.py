@@ -22,6 +22,7 @@ from .permissions import (IsAdminOrRead, IsAdminOrModerOrRead,
                           IsAdminUserOrReadOnly)
 from .utils import generate_confirmation_code
 from .mixins import ListCreateDestroyViewSet
+from .filters import TitleRangeFilter
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -146,8 +147,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ('genre__slug', 'category__slug', 'name', 'year')
-    # permission_classes = [IsAdminOrRead]
+    filterset_class = TitleRangeFilter
+    permission_classes = [IsAdminOrRead]
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class CategoriesViewSet(ListCreateDestroyViewSet):
@@ -168,4 +170,3 @@ class GenresViewSet(ListCreateDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', ]
     lookup_field = 'slug'
-    http_method_names = ['get', 'post', 'delete']
