@@ -48,7 +48,7 @@ python manage.py flush
 ```
 2. Применить команду для импорта:
 ```
-python manage.py ImpData
+python manage.py ImpData_module
 ```
 
 # Некоторые примеры запросов:
