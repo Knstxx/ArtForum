@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django_filters',
     'api.apps.ApiConfig',
     'reviews',
+    'users',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
@@ -92,7 +93,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-AUTH_USER_MODEL = 'reviews.MyUser'
+AUTH_USER_MODEL = 'users.MyUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
