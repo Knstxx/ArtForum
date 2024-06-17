@@ -1,63 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 
-
-CHOICES = (
-    (1, '1'),
-    (2, '2'),
-    (3, '3'),
-    (4, '4'),
-    (5, '5'),
-    (6, '6'),
-    (7, '7'),
-    (8, '8'),
-    (9, '9'),
-    (10, '10'),
-)
-
-
-class MyUser(AbstractUser):
-    ROLES = [
-        ('user', 'User'),
-        ('moderator', 'Moderator'),
-        ('admin', 'Admin'),
-    ]
-    email = models.EmailField(max_length=254, unique=True)
-    username = models.CharField(
-        max_length=150,
-        unique=True,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z'
-            )
-        ]
-    )
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
-    role = models.CharField(max_length=20, default='user', choices=ROLES)
-    bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.CharField(max_length=255, blank=False)
-
-    @property
-    def is_user(self):
-        return self.role == 'user'
-
-    @property
-    def is_admin(self):
-        return self.role == 'admin'
-
-    @property
-    def is_moderator(self):
-        return self.role == 'moderator'
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-
-    def __str__(self):
-        return self.username
+from users.models import MyUser
 
 
 class Genre(models.Model):
@@ -102,7 +47,7 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
-    """Промежуточная модель для связи Ttile и Genre."""
+    """Промежуточная модель для связи Title и Genre."""
 
     title = models.ForeignKey(
         Title,
@@ -131,7 +76,10 @@ class Review(models.Model):
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               related_name='reviews')
-    score = models.SmallIntegerField('Оценка произведения', choices=CHOICES)
+    score = models.SmallIntegerField('Оценка произведения', validators=[
+                                MinValueValidator(1, 'Оценка не может быть ниже 1'),
+                                MaxValueValidator(10, 'Оценка не может быть выше 10')
+                            ])
 
     class Meta:
         constraints = [
