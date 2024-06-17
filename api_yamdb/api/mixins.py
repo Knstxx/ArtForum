@@ -7,4 +7,4 @@ class ListCreateDestroyViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    pass
+    """Миксин на get, create, delete."""
