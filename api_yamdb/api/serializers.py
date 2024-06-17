@@ -1,4 +1,5 @@
 import re
+
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from django.contrib.auth import get_user_model
@@ -120,18 +121,6 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
         fields = ('name', 'slug')
         lookup_field = 'slug'
-
-
-class GenreField(serializers.SlugRelatedField):
-    def to_representation(self, value):
-        serializer = GenreSerializer(value)
-        return serializer.data
-
-
-class CategoryField(serializers.SlugRelatedField):
-    def to_representation(self, value):
-        serializer = CategorieSerializer(value)
-        return serializer.data
 
 
 class TitleReadonlySerializer(serializers.ModelSerializer):

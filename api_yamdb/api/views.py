@@ -122,7 +122,7 @@ def signup(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     """ВьюСет модели отзывов."""
 
     queryset = Review.objects.all()
@@ -144,7 +144,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return title.reviews.all()
 
 
-class CommentsViewSet(viewsets.ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментов."""
 
     queryset = Comment.objects.all()
@@ -178,7 +178,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
 
-class CategoriesViewSet(ListCreateDestroyViewSet):
+class CategorieViewSet(ListCreateDestroyViewSet):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
@@ -189,7 +189,7 @@ class CategoriesViewSet(ListCreateDestroyViewSet):
     search_fields = ['name', ]
 
 
-class GenresViewSet(ListCreateDestroyViewSet):
+class GenreViewSet(ListCreateDestroyViewSet):
     """Вьюсет для жанров."""
 
     queryset = Genre.objects.all()
