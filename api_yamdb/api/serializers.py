@@ -1,13 +1,10 @@
 import re
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from .utils import generate_confirmation_code
 
 from reviews.models import Review, Comment, Genre, Title, Category
-from .utils import generate_confirmation_code
 
 
 User = get_user_model()
@@ -38,9 +35,11 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError("Using 'me' as a username is not allowed.")
+            raise serializers.ValidationError(
+                'Using "me" as a username is not allowed.'
+            )
         if len(value) > 150:
-            raise serializers.ValidationError("Tooo looong username...")
+            raise serializers.ValidationError('Tooo looong username...')
         pattern = re.compile(r'^[\w.@+-]+\Z')
         if not pattern.match(value):
             raise serializers.ValidationError('Корявый username !')
@@ -48,7 +47,7 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         if len(value) > 254:
-            raise serializers.ValidationError("Email tooo looong...")
+            raise serializers.ValidationError('Email tooo looong...')
         return value
 
 
@@ -174,7 +173,7 @@ class TitleSerializer(serializers.ModelSerializer):
                                                   instance.description)
         instance.save()
         return super().update(instance, validated_data)
-    
+
     def to_representation(self, title):
         """Определяет какой сериализатор будет использоваться для чтения."""
         serializer = TitleReadonlySerializer(title)

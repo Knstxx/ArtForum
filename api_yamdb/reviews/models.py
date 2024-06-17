@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from users.models import MyUser
@@ -76,10 +75,15 @@ class Review(models.Model):
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               related_name='reviews')
-    score = models.SmallIntegerField('Оценка произведения', validators=[
-                                MinValueValidator(1, 'Оценка не может быть ниже 1'),
-                                MaxValueValidator(10, 'Оценка не может быть выше 10')
-                            ])
+    score = models.SmallIntegerField('Оценка произведения',
+                                     validators=[
+                                         MinValueValidator(
+                                             1, 'Оценка не может быть ниже 1'
+                                         ),
+                                         MaxValueValidator(
+                                             10, 'Оценка не может быть выше 10'
+                                         )
+                                     ])
 
     class Meta:
         constraints = [

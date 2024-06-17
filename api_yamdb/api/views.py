@@ -6,14 +6,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 )
-from rest_framework.views import APIView
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.decorators import action, api_view, permission_classes
 from django.db.models import Avg
 from rest_framework.filters import SearchFilter
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import (Review, Comment,
@@ -80,14 +78,15 @@ def get_jwt_token(request):
     serializer = TokenObtainSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
+    conf_code = data.get('confirmation_code')
     try:
         user = User.objects.get(username=data['username'])
     except User.DoesNotExist:
         return Response(
             {'username': 'Пользователь не найден!'},
             status=status.HTTP_404_NOT_FOUND)
-    if data.get('confirmation_code') == user.confirmation_code:
-        token = RefreshToken.for_user(user).access_token
+    if default_token_generator.check_token(user, conf_code):
+        token = AccessToken.for_user(user)
         return Response({'token': str(token)},
                         status=status.HTTP_201_CREATED)
     return Response(
@@ -136,11 +135,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def perform_create(self, serializer):
-        # Получаем пользователя.
         user = self.request.user
-        # Получаем произведение.
         title = self.get_title()
-        # Все отзывы пользователя к произведению.
         serializer.save(author=user, title=title)
 
     def get_queryset(self):
