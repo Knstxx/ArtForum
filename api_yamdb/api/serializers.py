@@ -27,29 +27,36 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.Serializer):
     """Сериализатор для регистрации."""
 
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True, max_length=150)
+    email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         fields = (
             'username', 'email')
 
     def validate_username(self, value):
-        if value == 'me':
+        if value.lower() == 'me':
             raise serializers.ValidationError(
                 'Using "me" as a username is not allowed.'
             )
-        if len(value) > 150:
-            raise serializers.ValidationError('Tooo looong username...')
         pattern = re.compile(r'^[\w.@+-]+\Z')
         if not pattern.match(value):
-            raise serializers.ValidationError('Корявый username !')
+            raise serializers.ValidationError('Invalid username!')
         return value
 
     def validate_email(self, value):
-        if len(value) > 254:
-            raise serializers.ValidationError('Email tooo looong...')
         return value
+
+    def validate(self, data):
+        email = data['email']
+        username = data['username']
+        user_username = User.objects.filter(username=username)
+        user_email = User.objects.filter(email=email)
+        if user_email.exists() and user_email[0].username != username:
+            raise serializers.ValidationError('Email занят :(')
+        if user_username.exists() and user_username[0].email != email:
+            raise serializers.ValidationError('Username занят :(')
+        return data
 
 
 class TokenObtainSerializer(serializers.Serializer):
@@ -105,7 +112,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class CategorieSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор категорий."""
 
     class Meta:
@@ -126,7 +133,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleReadonlySerializer(serializers.ModelSerializer):
     """Сериализатор произведений для List и Retrieve."""
 
-    category = CategorieSerializer(read_only=True)
+    category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
     rating = serializers.FloatField(read_only=True)
 
@@ -151,17 +158,6 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-
-    def update(self, instance, validated_data):
-        if 'genre' in validated_data:
-            genres = validated_data.pop('genre')
-            instance.genre.set(genres)
-        instance.name = validated_data.get('name', instance.name)
-        instance.year = validated_data.get('year', instance.year)
-        instance.description = validated_data.get('description',
-                                                  instance.description)
-        instance.save()
-        return super().update(instance, validated_data)
 
     def to_representation(self, title):
         """Определяет какой сериализатор будет использоваться для чтения."""

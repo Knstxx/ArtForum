@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import (Review, Comment,
                             Genre, Title, Category)
 from .serializers import (CommentSerializer, TitleSerializer,
-                          CategorieSerializer, GenreSerializer,
+                          CategorySerializer, GenreSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer, ReviewSerializer
                           )
@@ -101,16 +101,9 @@ def signup(request):
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
-    user_username = User.objects.filter(username=username)
-    user_email = User.objects.filter(email=email)
-    if user_email.exists() and user_email[0].username != username:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    if user_username.exists() and user_username[0].email != email:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
     user, created = User.objects.get_or_create(
         email=email, username=username)
     confirmation_code = default_token_generator.make_token(user)
-    user.confirmation_code = confirmation_code
     user.save()
     send_mail(
         'Confirmation code',
@@ -182,7 +175,7 @@ class CategorieViewSet(ListCreateDestroyViewSet):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
-    serializer_class = CategorieSerializer
+    serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = [IsAdminOrRead]
     filter_backends = [filters.SearchFilter]
