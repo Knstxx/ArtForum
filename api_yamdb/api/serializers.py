@@ -51,6 +51,17 @@ class RegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError('Email tooo looong...')
         return value
 
+    def validate(self, data):
+        email = data['email']
+        username = data['username']
+        user_username = User.objects.filter(username=username)
+        user_email = User.objects.filter(email=email)
+        if user_email.exists() and user_email[0].username != username:
+            raise serializers.ValidationError('Email занят :(')
+        if user_username.exists() and user_username[0].email != email:
+            raise serializers.ValidationError('Username занят :(')
+        return data
+
 
 class TokenObtainSerializer(serializers.Serializer):
     """Сериализатор получения токена."""
