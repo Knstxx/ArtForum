@@ -26,7 +26,6 @@ class MyUser(AbstractUser):
     )
     role = models.CharField(max_length=20, default='user', choices=ROLES)
     bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.CharField(max_length=255, blank=False)
 
     @property
     def is_user(self):
