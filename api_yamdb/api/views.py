@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import (Review, Comment,
                             Genre, Title, Category)
 from .serializers import (CommentSerializer, TitleSerializer,
-                          CategorieSerializer, GenreSerializer,
+                          CategorySerializer, GenreSerializer,
                           RegisterSerializer, TokenObtainSerializer,
                           UserSerializer, ReviewSerializer
                           )
@@ -175,7 +175,7 @@ class CategorieViewSet(ListCreateDestroyViewSet):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
-    serializer_class = CategorieSerializer
+    serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = [IsAdminOrRead]
     filter_backends = [filters.SearchFilter]
