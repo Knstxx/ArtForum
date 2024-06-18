@@ -4,6 +4,9 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from users.models import MyUser
 
 
+MAX_STR_LENGTH = 100
+
+
 class Genre(models.Model):
     """Модель жанров."""
 
@@ -91,6 +94,8 @@ class Review(models.Model):
                                     name='unique_review')]
 
     def __str__(self):
+        if len(self.text) > MAX_STR_LENGTH:
+            return self.text[:MAX_STR_LENGTH] + '...'
         return self.text
 
 
