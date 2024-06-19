@@ -162,3 +162,4 @@ class TitleSerializer(serializers.ModelSerializer):
         """Определяет какой сериализатор будет использоваться для чтения."""
         serializer = TitleReadonlySerializer(title)
         return serializer.data
+!
