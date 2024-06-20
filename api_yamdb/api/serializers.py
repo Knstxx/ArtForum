@@ -51,9 +51,9 @@ class RegisterSerializer(serializers.Serializer):
         user_email = User.objects.filter(email=email)
         if User.objects.filter(username=username, email=email):
             return data
-        if user_email.exists() and user_email[0].username != username:
+        if user_email.exists():
             raise serializers.ValidationError('Email taken')
-        if user_username.exists() and user_username[0].email != email:
+        if user_username.exists():
             raise serializers.ValidationError('Username taken')
         return data
 
