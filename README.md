@@ -3,7 +3,7 @@
 1. Проект ArtForum собирает отзывы пользователей на различные произведения.
 2. Написан по ReDoc документации.
 3. Над проектом работали:
-<a href="https://github.com/Knstxx" target="_blank">Константин</a>
+<a href="https://github.com/Knstxx" target="_blank">Konstantin Khotnog</a>
 <a href="https://github.com/Andrew-White-cyber" target="_blank">Андрей</a>
 <a href="https://github.com/Jlanceth" target="_blank">Данил</a>
 
